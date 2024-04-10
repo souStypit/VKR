@@ -1,0 +1,18 @@
+#!gbuild
+[Program]
+	-I.
+	:sourceDir=.
+crt0.mip
+iregdef.h
+idtcpu.h
+mcp.h
+ldr_util2.h
+ldr_util2.c
+prog_rom.c
+prog_rom.h
+TestProg_0x30.c
+ex_io\std_io.c
+ex_io\std_io.h
+Libs\libansi.a
+Libs\libarch.a
+standalone_ram.ld
