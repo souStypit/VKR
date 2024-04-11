@@ -1,9 +1,7 @@
 # -*- coding:utf-8 -*-
 import time
 import csv
-import shortClasses
 import os
-import io
 
 import numpy as np
 from scipy.interpolate import spline
@@ -13,13 +11,14 @@ import matplotlib.image as img
 import add_import_paths  # не удалять тут пути прописываются
 add_import_paths.add_public_path()
 
-import support_scripts
 import techChannel
-import datetime
+import shortClasses
 
 
 TEST_TEXT_NUMBER = u"Класс анализа ПЗУ."
 TEST_DESCRIPTION = u"В этом классе описаны методы, связанные с анализом ПЗУ."
+
+TEST_PATH = 'C:\Users\User\Desktop\work\Romka\TKPA_GVM100-6_PO_U.10048-01\Gurza\RomAnalyzer\MedHelp\TestProg_0x30.run'
 
 
 class RomAnalyzer:
@@ -27,16 +26,16 @@ class RomAnalyzer:
         self.GVM = None
         self.GVM_connection = False
 
-        _dir = 'RomAnalyzerData'
-        self.dir_path = _dir + os.sep
+        self.dir_path = u'RomAnalyzerData' + os.sep
+        self.cur_path = None
 
-        if not os.path.exists(_dir):
-            os.mkdir(_dir)
+        if not os.path.exists(self.dir_path):
+            os.mkdir(self.dir_path)
 
         self.data = list()
 
-    def create_connection(self):
-        self.GVM = techChannel.TechChannel(protocol_type="GVM_Mon", number_vm=0)
+    def create_connection(self, protocol_type, port_name, number_vm, work_speed):
+        self.GVM = techChannel.TechChannel(protocol_type, port_name, number_vm, work_speed)
         number_vm = self.GVM.interface.numberVM
         print(u"Ожидание соединения с ВМ{}...".format(number_vm))
 
@@ -63,14 +62,47 @@ class RomAnalyzer:
         return success, output_string
 
     def close_connection(self):
+        number_vm = self.GVM.interface.numberVM
         self.GVM.close_link()
         self.GVM_connection = False
         self.GVM = None
+        print u"Соединение с ВМ{} закрыто".format(number_vm)
+
+    def load_test(self, test_path):
+        if not self.GVM_connection:
+            return
+
+        time_start = time.clock()
+        return_data = self.GVM.file_to_device(test_path)
+        if return_data.error is True:
+            print u"Ошибка при работе с загружаемым тестом"
+        else:
+            print u"Загружаемый тест готов к использованию: \"{}\"".format(test_path)
+        time_end = time.clock()
+
+        print 'Время загрузки теста: {} сек.'.format(time_end - time_start)
+
+    def launch_test(self, parameter_1, parameter_2):
+        if not self.GVM_connection:
+            return
+
+        start_address = self.GVM.fileParser.get_address()
+
+        time_start = time.clock()
+        return_data = self.GVM.start_load_test_long(start_address,
+                                                    parameter_1,
+                                                    parameter_2)
+        time_end = time.clock()
+
+        print u'\n\nВремя работы теста: {} сек.'.format(time_end - time_start)
+
+        return return_data.data
 
     def read_sector(self, sector_number):
         if not self.GVM_connection:
             return
 
+        time_start = time.clock()
         sector_size = shortClasses.GVM_PZU_K[sector_number]
         sector_address = self.GVM.get_flash_info(sector_number, 1).data | 0xA0000000
         next_sector_address = sector_address + sector_size
@@ -85,8 +117,12 @@ class RomAnalyzer:
         if ptr != sector_address and remaining_space > 0:
             self.data.extend(self.GVM.read_memory_long(ptr, remaining_space).data)
 
-    def create_csv(self):
-        csv_file_path = self.dir_path + 'csv_raw_data_{}.csv'.format(0)
+        time_end = time.clock()
+
+        print 'Время чтения сектора ПЗУ: {} сек.'.format(time_end - time_start)
+
+    def create_csv(self, cycle_n):
+        csv_file_path = self.cur_path + 'csv_raw_data_{}.csv'.format(cycle_n)
         csv_file = open(csv_file_path, 'w')
         writer = csv.writer(csv_file, delimiter=',', lineterminator='\n')
 
@@ -100,24 +136,45 @@ class RomAnalyzer:
                 tmp_list.append(self.data[num])
             writer.writerow(tmp_list)
 
-    def read_csv(self):
-        csv_file_path = self.dir_path + 'csv_raw_data_{}.csv'.format(0)
+    def read_csv(self, cycle_n):
+        csv_file_path = self.cur_path + 'csv_raw_data_{}.csv'.format(cycle_n)
         csv_file = open(csv_file_path, 'r')
         reader = csv.reader(csv_file, delimiter=',', lineterminator='\n')
 
-        for el in reader:
-            print(el)
+        # НЕ ДОДЕЛАНО
+        # for el in reader:
+        #     print(el)
+
+    def change_folder(self, folder):
+        self.cur_path = self.dir_path + folder + os.sep
+        if not os.path.exists(self.cur_path):
+            os.mkdir(self.cur_path)
 
 
 if __name__ == "__main__":
     rom_entity = RomAnalyzer()
 
-    rom_entity.create_connection()
-    rom_entity.check_connection()
-    rom_entity.read_sector(30)
-    rom_entity.close_connection()
+    rom_entity.change_folder(time.strftime("%H_%M_%S-%d_%m_%Y"))
+    rom_entity.create_connection("GVM_Mon",
+                                 "COM3",
+                                 0,
+                                 57600)
 
-    rom_entity.create_csv()
-    rom_entity.read_csv()
+    if rom_entity.GVM_connection:
+        rom_entity.load_test(TEST_PATH)
 
-    # print rom_entity.data
+        cycle_number = 0
+        while True:
+            print u'\nЦикл №{}'.format(cycle_number + 1)
+
+            return_data = rom_entity.launch_test(0x40000 + 0x200 * cycle_number, 30)
+            rom_entity.read_sector(30)
+            rom_entity.create_csv(cycle_number)
+
+            cycle_number += 1
+
+            # НЕ ДОДЕЛАНО
+            if return_data == 0xFFFFFFFF:
+                break
+
+        rom_entity.close_connection()
