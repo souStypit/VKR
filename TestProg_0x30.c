@@ -1,8 +1,8 @@
 /***********************************************************
-*  ÒÅÑÒ ÏĞÎÃĞÀÌÌÈĞÎÂÀÍÈß ÏÇÓ
+*  Ğ¢Ğ•Ğ¡Ğ¢ ĞŸĞ ĞĞ“Ğ ĞĞœĞœĞ˜Ğ ĞĞ’ĞĞĞ˜Ğ¯ ĞŸĞ—Ğ£
 ***********************************************************/
 
-// ÂÍÅØÍÈÉ ÌÅÕÀÍÈÇÌ ÇÀÙÈÒÛ ÑÅÊÒÎĞÎÂ, ÊÎÃÄÀ ÇÀÊĞÛÒÀ ÈÄÅÍÒÈÔÈÊÀÖÈß
+// Ğ’ĞĞ•Ğ¨ĞĞ˜Ğ™ ĞœĞ•Ğ¥ĞĞĞ˜Ğ—Ğœ Ğ—ĞĞ©Ğ˜Ğ¢Ğ« Ğ¡Ğ•ĞšĞ¢ĞĞ ĞĞ’, ĞšĞĞ“Ğ”Ğ Ğ—ĞĞšĞ Ğ«Ğ¢Ğ Ğ˜Ğ”Ğ•ĞĞ¢Ğ˜Ğ¤Ğ˜ĞšĞĞ¦Ğ˜Ğ¯
 //#define EXTERNAL_PROTECT  0
 #define EXTERNAL_PROTECT 1
 
@@ -17,27 +17,26 @@ void print_rom_state(unsigned int *sector_address_ptr) {
            sector_address_ptr[3]);
 }
 #endif
-    
-unsigned int main(/*int suspend, int sector_number*/)
+
+unsigned int main(int suspend, int sector_number)
 {
     unsigned int sector_address;
-    unsigned int _state = 0x0, delay_ressys = 305 /* ~ 9 ìêñ */;
-    unsigned int sector_number = 4, suspend = 0x100000; // main parameters
+    unsigned int _state = 0x0, delay_ressys = 305 /* ~ 9 Ğ¼ĞºÑ */;
 
-    printf("\n\n  ÒÅÑÒ ÑÒÈĞÀÍÈß ÑÅÊÒÎĞÀ ÏÇÓ %d", sector_number);
+    printf("\n  Ğ¢Ğ•Ğ¡Ğ¢ Ğ¡Ğ¢Ğ˜Ğ ĞĞĞ˜Ğ¯ Ğ¡Ğ•ĞšĞ¢ĞĞ Ğ ĞŸĞ—Ğ£ %d", sector_number);
 
     sector_address = get_sector_address(sector_number);
-    printf("\n  Àäğåñ ñåêòîğà: %08X", sector_address);
+    printf("\n  ĞĞ´Ñ€ĞµÑ ÑĞµĞºÑ‚Ğ¾Ñ€Ğ°: %08X", sector_address);
+    printf("\n  Ğ—Ğ°Ğ´ĞµÑ€Ğ¶ĞºĞ° ÑÑ‚Ğ¸Ñ€Ğ°Ğ½Ğ¸Ñ: %d Ğ¼Ñ. %d Ğ¼ĞºÑ.", suspend/1000, suspend%1000);
 
     if (check_erase(sector_address)) erase(sector_address);
 
-    program(sector_address, 0x01234567); // Ñòèğàíèå äëÿ êîğğåêòíîãî èñïîëíåíèÿ öèêëà
-#ifdef DEBUG_
-    print_rom_state((unsigned int *)sector_address);
-#endif
+//     program(sector_address, 0x01234567); // Ğ¡Ñ‚Ğ¸Ñ€Ğ°Ğ½Ğ¸Ğµ Ğ´Ğ»Ñ ĞºĞ¾Ñ€Ñ€ĞµĞºÑ‚Ğ½Ğ¾Ğ³Ğ¾ Ğ¸ÑĞ¿Ğ¾Ğ»Ğ½ĞµĞ½Ğ¸Ñ Ñ†Ğ¸ĞºĞ»Ğ°
+// #ifdef DEBUG_
+//     print_rom_state((unsigned int *)sector_address);
+// #endif
 
     _state = erase_suspend(sector_address, suspend, delay_ressys);
 
     return _state;
-
 }
