@@ -1,16 +1,16 @@
 /***********************************************************
-*  ПРОГРАММАТОР ПЗУ 
+*  РџР РћР“Р РђРњРњРђРўРћР  РџР—РЈ 
 ***********************************************************/
 
 #include "prog_rom.h"
 
-// функция сброса регистра встроенного таймера
+// С„СѓРЅРєС†РёСЏ СЃР±СЂРѕСЃР° СЂРµРіРёСЃС‚СЂР° РІСЃС‚СЂРѕРµРЅРЅРѕРіРѕ С‚Р°Р№РјРµСЂР°
 void set_zero_timer(void) 
 {
     asm(".set noreorder; mtc0  $0,$9; nop; nop; .set reorder");
 }
 //----------//----------//----------//----------//----------//----------//----------//----------//----------//
-// функция чтения значения встроенного таймера
+// С„СѓРЅРєС†РёСЏ С‡С‚РµРЅРёСЏ Р·РЅР°С‡РµРЅРёСЏ РІСЃС‚СЂРѕРµРЅРЅРѕРіРѕ С‚Р°Р№РјРµСЂР°
 unsigned get_tick_timer(void) 
 {
     asm(".set noreorder; mfc0  $2,$9; nop; nop; .set reorder");
@@ -18,19 +18,19 @@ unsigned get_tick_timer(void)
 
 unsigned int protected_sector(unsigned int sector_number) { return sector_number % MaxRomSector < NumberOfProtectedSectors; }
 
-// Получение адреса сектора по его номеру без учета K1BASE и банка ПЗУ
+// РџРѕР»СѓС‡РµРЅРёРµ Р°РґСЂРµСЃР° СЃРµРєС‚РѕСЂР° РїРѕ РµРіРѕ РЅРѕРјРµСЂСѓ Р±РµР· СѓС‡РµС‚Р° K1BASE Рё Р±Р°РЅРєР° РџР—РЈ
 unsigned int get_sector_address_raw(unsigned int sector_number) {
-	return (protected_sector(sector_number)) ? 	etalon_addresses[sector_number] : // Если защищенный, то берем адрес из etalon_address
+	return (protected_sector(sector_number)) ? 	etalon_addresses[sector_number] : // Р•СЃР»Рё Р·Р°С‰РёС‰РµРЅРЅС‹Р№, С‚Рѕ Р±РµСЂРµРј Р°РґСЂРµСЃ РёР· etalon_address
 												etalon_addresses[4] + RomSize4 * (sector_number - NumberOfProtectedSectors);
 }
 
-// Получение адреса сектора по его номеру с учетом K1BASE и банка ПЗУ
+// РџРѕР»СѓС‡РµРЅРёРµ Р°РґСЂРµСЃР° СЃРµРєС‚РѕСЂР° РїРѕ РµРіРѕ РЅРѕРјРµСЂСѓ СЃ СѓС‡РµС‚РѕРј K1BASE Рё Р±Р°РЅРєР° РџР—РЈ
 unsigned int get_sector_address(unsigned int sector_number) {
 	unsigned int num = sector_number % MaxRomSector;
 	return K1BASE + (sector_number >= MaxRomSector ? RomChipSize : 0) + get_sector_address_raw(num);
 }
 
-// Разрешение программирования ПЗУ
+// Р Р°Р·СЂРµС€РµРЅРёРµ РїСЂРѕРіСЂР°РјРјРёСЂРѕРІР°РЅРёСЏ РџР—РЈ
 void rwr_enable() {							
 	R = ReadReg(R_SYS);
 	WriteReg(R_SYS, R | R_SYS_RWRROM);
@@ -38,9 +38,9 @@ void rwr_enable() {
 	RWR = 1;
 }
 
-// Запрещение программирования ПЗУ
+// Р—Р°РїСЂРµС‰РµРЅРёРµ РїСЂРѕРіСЂР°РјРјРёСЂРѕРІР°РЅРёСЏ РџР—РЈ
 void rwr_disable() {			
-	if (RWR) {	// проверка для того, чтобы не было случая, когда R еще не был прочитан (т.е. программирование не было разрешено)
+	if (RWR) {	// РїСЂРѕРІРµСЂРєР° РґР»СЏ С‚РѕРіРѕ, С‡С‚РѕР±С‹ РЅРµ Р±С‹Р»Рѕ СЃР»СѓС‡Р°СЏ, РєРѕРіРґР° R РµС‰Рµ РЅРµ Р±С‹Р» РїСЂРѕС‡РёС‚Р°РЅ (С‚.Рµ. РїСЂРѕРіСЂР°РјРјРёСЂРѕРІР°РЅРёРµ РЅРµ Р±С‹Р»Рѕ СЂР°Р·СЂРµС€РµРЅРѕ)
 		WriteReg(R_SYS, R);
 		wbflush();
 		RWR = 0;
@@ -68,15 +68,15 @@ unsigned int decode_data(unsigned int data) {
 		if (data & b2) 	tmp |= b5;
 		if (data & b1) 	tmp |= b6;
 		if (data & b0) 	tmp |= b7;
-		data = data >> SHIFT;			// 1 ит. - поворот первой половины слова 
-		res |= i ? tmp : tmp << SHIFT;	// 2 ит. - поворот второй половины слова
+		data = data >> SHIFT;			// 1 РёС‚. - РїРѕРІРѕСЂРѕС‚ РїРµСЂРІРѕР№ РїРѕР»РѕРІРёРЅС‹ СЃР»РѕРІР° 
+		res |= i ? tmp : tmp << SHIFT;	// 2 РёС‚. - РїРѕРІРѕСЂРѕС‚ РІС‚РѕСЂРѕР№ РїРѕР»РѕРІРёРЅС‹ СЃР»РѕРІР°
 	}
 	
 	return res;
 }
 
 unsigned int decode_addr(unsigned int addr) {
-	unsigned int res = addr & 0x7F01F; // 0x7F01F для маскирования нужной части адреса
+	unsigned int res = addr & 0x7F01F; // 0x7F01F РґР»СЏ РјР°СЃРєРёСЂРѕРІР°РЅРёСЏ РЅСѓР¶РЅРѕР№ С‡Р°СЃС‚Рё Р°РґСЂРµСЃР°
 
 	if (addr & b11) res |= b5;
 	if (addr & b10) res |= b6;
@@ -90,8 +90,8 @@ unsigned int decode_addr(unsigned int addr) {
 }
 
 /*
-	Декодирования всей последовательности команды 
-	(чтобы не декодировать в момент записи этой последовательности в ПЗУ)
+	Р”РµРєРѕРґРёСЂРѕРІР°РЅРёСЏ РІСЃРµР№ РїРѕСЃР»РµРґРѕРІР°С‚РµР»СЊРЅРѕСЃС‚Рё РєРѕРјР°РЅРґС‹ 
+	(С‡С‚РѕР±С‹ РЅРµ РґРµРєРѕРґРёСЂРѕРІР°С‚СЊ РІ РјРѕРјРµРЅС‚ Р·Р°РїРёСЃРё СЌС‚РѕР№ РїРѕСЃР»РµРґРѕРІР°С‚РµР»СЊРЅРѕСЃС‚Рё РІ РџР—РЈ)
 */
 void decode_sequence(unsigned int (*p_sAddr)[], unsigned int (*p_sData)[], unsigned int size) {
 	unsigned int i, *s_addr, *s_data;
@@ -102,7 +102,7 @@ void decode_sequence(unsigned int (*p_sAddr)[], unsigned int (*p_sData)[], unsig
 	for (i = 0; i < size; i++) s_data[i] = decode_data(s_data[i]);
 }
 
-// Запись последовательности в ПЗУ
+// Р—Р°РїРёСЃСЊ РїРѕСЃР»РµРґРѕРІР°С‚РµР»СЊРЅРѕСЃС‚Рё РІ РџР—РЈ
 void write_sequence(unsigned int *pAddr, unsigned int p_sAddr[], unsigned int p_sData[], unsigned int size) {
 	unsigned int i;
 
@@ -114,7 +114,7 @@ unsigned int check_erase(unsigned int Addr) {
 	unsigned int *pAddr = (unsigned int *)Addr;
 
 	for (i = 0; i < RomSize4 >> 2 && i < ROM_SIZE >> 2; i++)
-		if (pAddr[i] != 0xFFFFFFFF) return 1;	// Если не стерт
+		if (pAddr[i] != 0xFFFFFFFF) return 1;	// Р•СЃР»Рё РЅРµ СЃС‚РµСЂС‚
 
 	return 0;
 }
@@ -241,15 +241,15 @@ void algorithm_sector_erase_suspend(unsigned int Addr, unsigned int delay) {
 
 	if (Addr & RomChipSize) {
 		pAddr[0] = 0x000D000D;  // SUSPEND
-		pAddr[0] = 0x000F000F;	// СБРОС
+		pAddr[0] = 0x000F000F;	// РЎР‘Р РћРЎ
 	} else {
 		pAddr[0] = 0x00B000B0;
 		pAddr[0] = 0x00F000F0;
 	}
 }
 
-// сырая версия без проверки статус битов
-// надеюсь доделать, но не срочно
+// СЃС‹СЂР°СЏ РІРµСЂСЃРёСЏ Р±РµР· РїСЂРѕРІРµСЂРєРё СЃС‚Р°С‚СѓСЃ Р±РёС‚РѕРІ
+// РЅР°РґРµСЋСЃСЊ РґРѕРґРµР»Р°С‚СЊ, РЅРѕ РЅРµ СЃСЂРѕС‡РЅРѕ
 void erase(unsigned int Addr) {
 	
 	unsigned int *pAddr = (unsigned int *)Addr;
@@ -274,25 +274,25 @@ void wait_delay(const int delay) {
     }
 }
 
-// сырая версия без проверки статус битов
-// надеюсь доделать, но не срочно
+// СЃС‹СЂР°СЏ РІРµСЂСЃРёСЏ Р±РµР· РїСЂРѕРІРµСЂРєРё СЃС‚Р°С‚СѓСЃ Р±РёС‚РѕРІ
+// РЅР°РґРµСЋСЃСЊ РґРѕРґРµР»Р°С‚СЊ, РЅРѕ РЅРµ СЃСЂРѕС‡РЅРѕ
 unsigned int read_pzu_data(unsigned int Addr, unsigned int delay_ressys) {
-    unsigned int fstate = 0xFFFFFFFF; // Рез-т побитового перемножения массивов state
-    // unsigned int state_set[4], state_mid[4], state_end[4]; // Описывают состояние граничных адресов сектора ПЗУ
-    // unsigned int *sa_mid = (unsigned *)(Addr + 0x8000);  // Середина сектора
-    // unsigned int *sa_end = (unsigned *)(Addr + 0x1FFF0);  // Конец
+    unsigned int fstate = 0xFFFFFFFF; // Р РµР·-С‚ РїРѕР±РёС‚РѕРІРѕРіРѕ РїРµСЂРµРјРЅРѕР¶РµРЅРёСЏ РјР°СЃСЃРёРІРѕРІ state
+    // unsigned int state_set[4], state_mid[4], state_end[4]; // РћРїРёСЃС‹РІР°СЋС‚ СЃРѕСЃС‚РѕСЏРЅРёРµ РіСЂР°РЅРёС‡РЅС‹С… Р°РґСЂРµСЃРѕРІ СЃРµРєС‚РѕСЂР° РџР—РЈ
+    // unsigned int *sa_mid = (unsigned *)(Addr + 0x8000);  // РЎРµСЂРµРґРёРЅР° СЃРµРєС‚РѕСЂР°
+    // unsigned int *sa_end = (unsigned *)(Addr + 0x1FFF0);  // РљРѕРЅРµС†
     // int K = 0, i = 0;
     
-    unsigned Reg = ReadReg(R_SYS);       // ЧТЕНИЕ СИСТЕМНОГО РЕГИСТРА
-    WriteReg(R_SYS, Reg | R_SYS_RESSYS); // СБРОС ПЗУ // при технологической прошивке УО работает
+    R = ReadReg(R_SYS);       // Р§РўР•РќРР• РЎРРЎРўР•РњРќРћР“Рћ Р Р•Р“РРЎРўР Рђ
+    WriteReg(R_SYS, R | R_SYS_RESSYS); // РЎР‘Р РћРЎ РџР—РЈ // РїСЂРё С‚РµС…РЅРѕР»РѕРіРёС‡РµСЃРєРѕР№ РїСЂРѕС€РёРІРєРµ РЈРћ СЂР°Р±РѕС‚Р°РµС‚
     wbflush();
     
     wait_delay(delay_ressys);
     
-    WriteReg(R_SYS, Reg);                // СНЯТИЕ СБРОСА ПЗУ
+    WriteReg(R_SYS, R);                // РЎРќРЇРўРР• РЎР‘Р РћРЎРђ РџР—РЈ
     wbflush();
 
-    wait_delay(5);  // Задержка после рестарта для корректного чтения ПЗУ
+    wait_delay(5);  // Р—Р°РґРµСЂР¶РєР° РїРѕСЃР»Рµ СЂРµСЃС‚Р°СЂС‚Р° РґР»СЏ РєРѕСЂСЂРµРєС‚РЅРѕРіРѕ С‡С‚РµРЅРёСЏ РџР—РЈ
     
     // for (i = 0; i < 4; i++) { 
     //     fstate &= state_end[i] = sa_end[K + i];
@@ -310,7 +310,7 @@ unsigned int read_pzu_data(unsigned int Addr, unsigned int delay_ressys) {
     //     sa_mid+K,       sa_mid+K+3,         state_mid[K], state_mid[K+1], state_mid[K+2], state_mid[K+3], 
     //     sa_end+K,       sa_end+K+3,         state_end[K], state_end[K+1], state_end[K+2], state_end[K+3]); 
     
-    return fstate; // Стирание закончено
+    return fstate; // РЎС‚РёСЂР°РЅРёРµ Р·Р°РєРѕРЅС‡РµРЅРѕ
 }
 
 unsigned int erase_suspend(unsigned int Addr, unsigned int delay_sus, unsigned int delay_ressys) {
@@ -326,4 +326,4 @@ unsigned int erase_suspend(unsigned int Addr, unsigned int delay_sus, unsigned i
 	return state;
 }
 
-/************************ КОНЕЦ ФАЙЛА *********************/
+/************************ РљРћРќР•Р¦ Р¤РђР™Р›РђВ *********************/
